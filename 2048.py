@@ -30,6 +30,8 @@ class Game2048:
 	# Создаём начальную матрицу
 	def createMatrix(self):
 		global gMatrix
+		global gScore
+		gScore = 0
 		gMatrix = self.newGame()
 		gMatrix = self.addTile(gMatrix)
 		gMatrix = self.addTile(gMatrix)
@@ -93,11 +95,14 @@ class Game2048:
 		return (newMatrix, isDone)
 	
 	def merge(self, matrix):
+		global gScore
 		isDone = False
 		for x in range(4):
 			for y in range(3):
 				if (matrix[x][y] == matrix[x][y + 1]) and matrix[x][y]:
 					matrix[x][y] *= 2
+					# Обновляем счёт
+					gScore += matrix[x][y]
 					matrix[x][y + 1] = 0
 					isDone = True
 		return (matrix, isDone)
@@ -227,6 +232,19 @@ class GameWindow:
 				x = 0
 				y += 1
 
+	# Показ результата
+	def showResult(self, resText):
+		pygame.display.set_caption(resText)
+		loseScreen = Surface((self.width, self.height))
+		loseScreen.fill(Color(self.BACKGROUND_COLOR))
+		font = pygame.font.Font(None, 128)
+		text = font.render(resText, 1, Color("#ede0c8"))
+		textPos = text.get_rect()
+		textPos.centerx = loseScreen.get_rect().centerx
+		textPos.centery = loseScreen.get_rect().centery
+		loseScreen.blit(text, textPos)
+		self.add(loseScreen, 0, 0)
+
 	# Перерисовка поля
 	def redraw(self):
 		global gMatrix
@@ -241,6 +259,7 @@ class GameWindow:
 	# Нажатие на кнопку
 	def keyDown(self, key):
 		global gMatrix
+		global gScore
 		if (key == K_UP):
 			gMatrix, isDone = Game2048().up(gMatrix)
 		elif (key == K_DOWN):
@@ -254,11 +273,14 @@ class GameWindow:
 		if isDone:
 			gMatrix = Game2048().addTile(gMatrix)
 			self.redraw()
+			# Выводим счёт
+			pygame.display.set_caption("Счёт: " + str(gScore))
 			isDone = False
 		if Game2048().gameStatus(gMatrix) == "win":
-			pygame.display.set_caption("You Won!")
+			self.showResult("You Won!")
 		if Game2048().gameStatus(gMatrix) == "lose":
-			pygame.display.set_caption("You Lose!")
+			self.showResult("You Lose!")
+			
 
 	# Добавление компонента в окно
 	def add(self, surface, x, y):
